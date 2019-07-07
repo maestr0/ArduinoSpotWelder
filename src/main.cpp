@@ -24,9 +24,9 @@ unsigned long debounceDelay = 50;   // the debounce time; increase if the output
 
 int profileIndex = -1;
 
-int profiles[3][3] = {{100, 200, 300},
-                      {400, 50, 600},
-                      {400, 210, 320}};
+int profiles[][3] = {{50, 500, 500},
+                     {100, 500, 500},
+                     {150, 500, 500}};
 
 void setup()
 {
@@ -84,7 +84,7 @@ void switchProfile()
                 lcd.setCursor(0, 0);
                 lcd.print("Profile #" + String(profileIndex));
                 lcd.setCursor(0, 1);
-                lcd.print("H" + String(profiles[profileIndex][0]) + " C" + String(profiles[profileIndex][1]) + " W" + String(profiles[profileIndex][2]));
+                lcd.print("PW" + String(profiles[profileIndex][0]) + " P" + String(profiles[profileIndex][1]) + " W" + String(profiles[profileIndex][2]));
             }
         }
 
