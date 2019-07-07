@@ -11,16 +11,19 @@ const int colorB = 0;
 
 const int weldButtonPin = 3; // the number of the pushbutton pin
 const int menuButtonPin = 2; // the number of the pushbutton pin
+const int ssrPin = 8; 
 
 // Variables will change:
-int ledState = HIGH;        // the current state of the output pin
+int ssrButtonState = HIGH;        // the current state of the output pin
+int lastSsrState = HIGH;        // the current state of the output pin
 int buttonState;            // the current reading from the input pin
 int lastButtonState = HIGH; // the previous reading from the input pin
 
 // the following variables are unsigned long's because the time, measured in miliseconds,
 // will quickly become a bigger number than can be stored in an int.
 unsigned long lastDebounceTime = 0; // the last time the output pin was toggled
-unsigned long debounceDelay = 50;   // the debounce time; increase if the output flickers
+unsigned long lastSsrDebounceTime = 0; // the last time the output pin was toggled
+unsigned long debounceDelay = 200;   // the debounce time; increase if the output flickers
 
 int profileIndex = 0;
 
@@ -30,11 +33,15 @@ int profiles[][3] = {{50, 500, 500},
 
 void updateProfileScreen();
 
+void activateSsr();
+
 void setup()
 {
 
     pinMode(menuButtonPin, INPUT_PULLUP);
     pinMode(weldButtonPin, INPUT_PULLUP);
+    pinMode(ssrPin, OUTPUT);
+    digitalWrite(ssrPin, LOW);
     // set up the LCD's number of columns and rows:
     lcd.begin(16, 2);
 
@@ -76,8 +83,7 @@ void switchProfile()
 
             // only toggle the LED if the new button state is HIGH
             if (buttonState == HIGH)
-            {
-                ledState = !ledState;
+            {                
                 profileIndex++;
                 profileIndex = profileIndex % (sizeof(profiles) / sizeof(profiles[0]));
 
@@ -106,4 +112,43 @@ void updateProfileScreen()
 void loop()
 {
     switchProfile();
+    activateSsr();
+}
+
+void activateSsr(){
+    int reading = digitalRead(weldButtonPin);
+
+    if(reading !=lastSsrState) {
+        lastSsrDebounceTime = millis();
+    }
+
+     if ((millis() - lastSsrDebounceTime) < debounceDelay)
+    {
+        // whatever the reading is at, it's been there for longer
+        // than the debounce delay, so take it as the actual current state:
+
+        // if the button state has changed:
+        if (reading != ssrButtonState)
+        {
+            ssrButtonState = reading;
+
+            // only toggle the LED if the new button state is HIGH
+            if (ssrButtonState == HIGH)
+            {                
+                
+                lcd.setRGB(255, 0, 0);
+                delay(profiles[profileIndex][0]);
+                delay(profiles[profileIndex][1]);
+                delay(profiles[profileIndex][2]);
+                lcd.setRGB(colorR, colorG, colorB);
+            }
+        }
+
+        // set the LED:
+        // digitalWrite(ledPin, ledState);
+
+        // save the reading. Next time through the loop,
+        // it'll be the lastButtonState:
+        lastButtonState = reading;
+    }
 }
