@@ -32,8 +32,8 @@ int profiles[][3] = {{50, 500, 500},
                      {1000, 100, 2000}};
 
 void updateProfileScreen();
-
 void activateSsr();
+void switchProfile();
 
 void setup()
 {
@@ -41,18 +41,21 @@ void setup()
     pinMode(menuButtonPin, INPUT_PULLUP);
     pinMode(weldButtonPin, INPUT_PULLUP);
     pinMode(ssrPin, OUTPUT);
-    digitalWrite(ssrPin, HIGH);
-    // set up the LCD's number of columns and rows:
+    digitalWrite(ssrPin, HIGH);    
+    
     lcd.begin(16, 2);
-
     lcd.setRGB(colorR, colorG, colorB);
-
-    // Print a message to the LCD.
-    lcd.print("ShittySpotWelder");
+    lcd.print("Spot Welder v0.1");
     lcd.setCursor(0, 1);
     lcd.print("made by Pawel");
-    delay(300);
+    delay(1000);
     updateProfileScreen();
+}
+
+void loop()
+{
+    switchProfile();
+    activateSsr();
 }
 
 void switchProfile()
@@ -103,12 +106,6 @@ void updateProfileScreen()
     lcd.print("PW" + String(profiles[profileIndex][0]) + " P" + String(profiles[profileIndex][1]) + " W" + String(profiles[profileIndex][2]));
 }
 
-void loop()
-{
-    switchProfile();
-    activateSsr();
-}
-
 void activateSsr()
 {
     int reading = digitalRead(weldButtonPin);
@@ -136,12 +133,6 @@ void activateSsr()
                 lcd.setRGB(colorR, colorG, colorB);
             }
         }
-
-        // set the LED:
-        // digitalWrite(ledPin, ledState);
-
-        // save the reading. Next time through the loop,
-        // it'll be the lastButtonState:
         lastButtonState = reading;
     }
 }
