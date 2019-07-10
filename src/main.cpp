@@ -14,16 +14,17 @@ const int menuButtonPin = 2; // the number of the pushbutton pin
 const int ssrPin = 7;
 
 // Variables will change:
-int ssrButtonState = HIGH;  // the current state of the output pin
-int lastSsrState = HIGH;    // the current state of the output pin
-int buttonState;            // the current reading from the input pin
-int lastButtonState = HIGH; // the previous reading from the input pin
+int ssrButtonState = HIGH; // the current state of the output pin
+int lastSsrState = HIGH;   // the current state of the output pin
+
+int menuButtonState;            // the current reading from the input pin
+int lastMenuButtonState = HIGH; // the previous reading from the input pin
 
 // the following variables are unsigned long's because the time, measured in miliseconds,
 // will quickly become a bigger number than can be stored in an int.
 unsigned long lastDebounceTime = 0;    // the last time the output pin was toggled
 unsigned long lastSsrDebounceTime = 0; // the last time the output pin was toggled
-unsigned long debounceDelay = 200;     // the debounce time; increase if the output flickers
+unsigned long debounceDelay = 100;      // the debounce time; increase if the output flickers
 
 int profileIndex = 0;
 
@@ -41,14 +42,14 @@ void setup()
     pinMode(menuButtonPin, INPUT_PULLUP);
     pinMode(weldButtonPin, INPUT_PULLUP);
     pinMode(ssrPin, OUTPUT);
-    digitalWrite(ssrPin, HIGH);    
-    
+    digitalWrite(ssrPin, LOW);
+
     lcd.begin(16, 2);
     lcd.setRGB(colorR, colorG, colorB);
     lcd.print("Spot Welder v0.1");
     lcd.setCursor(0, 1);
     lcd.print("made by Pawel");
-    delay(1000);
+    delay(100);
     updateProfileScreen();
 }
 
@@ -68,24 +69,21 @@ void switchProfile()
     // long enough since the last press to ignore any noise:
 
     // If the switch changed, due to noise or pressing:
-    if (reading != lastButtonState)
+    if (reading != lastMenuButtonState)
     {
         // reset the debouncing timer
         lastDebounceTime = millis();
     }
 
-    if ((millis() - lastDebounceTime) < debounceDelay)
+    if ((millis() - lastDebounceTime) > debounceDelay)
     {
-        // whatever the reading is at, it's been there for longer
-        // than the debounce delay, so take it as the actual current state:
-
         // if the button state has changed:
-        if (reading != buttonState)
+        if (reading != menuButtonState)
         {
-            buttonState = reading;
+            menuButtonState = reading;
 
             // only toggle the LED if the new button state is HIGH
-            if (buttonState == HIGH)
+            if (menuButtonState == LOW)
             {
                 profileIndex++;
                 profileIndex = profileIndex % (sizeof(profiles) / sizeof(profiles[0]));
@@ -93,8 +91,9 @@ void switchProfile()
                 updateProfileScreen();
             }
         }
-        lastButtonState = reading;
     }
+
+    lastMenuButtonState = reading;
 }
 
 void updateProfileScreen()
@@ -115,24 +114,24 @@ void activateSsr()
         lastSsrDebounceTime = millis();
     }
 
-    if ((millis() - lastSsrDebounceTime) < debounceDelay)
+    if ((millis() - lastSsrDebounceTime) > debounceDelay)
     {
         if (reading != ssrButtonState)
         {
             ssrButtonState = reading;
-            if (ssrButtonState == HIGH)
+            if (ssrButtonState == LOW)
             {
                 lcd.setRGB(255, 0, 0);
-                digitalWrite(ssrPin, LOW);
+                digitalWrite(ssrPin, HIGH);
                 delay(profiles[profileIndex][0]);
-                digitalWrite(ssrPin, HIGH);
-                delay(profiles[profileIndex][1]);
                 digitalWrite(ssrPin, LOW);
-                delay(profiles[profileIndex][2]);
+                delay(profiles[profileIndex][1]);
                 digitalWrite(ssrPin, HIGH);
+                delay(profiles[profileIndex][2]);
+                digitalWrite(ssrPin, LOW);
                 lcd.setRGB(colorR, colorG, colorB);
             }
-        }
-        lastButtonState = reading;
+        }        
     }
+    lastSsrState = reading;
 }
